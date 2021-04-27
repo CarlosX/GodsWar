@@ -1,3 +1,3 @@
 # GodsWar
-GodsWar Emulator
+GodsWar Emulator - Rework (https://github.com/CarlosX/TestProjects)
 
