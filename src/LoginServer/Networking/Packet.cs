@@ -14,37 +14,30 @@ namespace LoginServer.Networking
     {
         protected ClientPacket(LoginPacket loginPacket)
         {
-            _worldPacket = loginPacket;
+            _loginPacket = loginPacket;
         }
 
         public abstract void Read();
 
         public void Dispose()
         {
-            _worldPacket.Dispose();
+            _loginPacket.Dispose();
         }
 
-        public ClientOpcodes GetOpcode() { return (ClientOpcodes)_worldPacket.GetOpcode(); }
+        public ClientOpcodes GetOpcode() { return (ClientOpcodes)_loginPacket.GetOpcode(); }
 
         public void LogPacket(LoginSession session)
         {
             Log.outDebug(LogFilter.Network, "Received ClientOpcode: {0} From: {1}", GetOpcode(), session != null ? session.GetPlayerInfo() : "Unknown IP");
         }
 
-        protected LoginPacket _worldPacket;
+        protected LoginPacket _loginPacket;
     }
 
     public abstract class ServerPacket
     {
         protected ServerPacket(ServerOpcodes opcode)
         {
-            connectionType = ConnectionType.Realm;
-            _loginPacket = new LoginPacket(opcode);
-        }
-
-        protected ServerPacket(ServerOpcodes opcode, ConnectionType type = ConnectionType.Realm)
-        {
-            connectionType = type;
             _loginPacket = new LoginPacket(opcode);
         }
 
@@ -82,10 +75,7 @@ namespace LoginServer.Networking
             _loginPacket.Dispose();
         }
 
-        public ConnectionType GetConnection() { return connectionType; }
-
         byte[] buffer;
-        ConnectionType connectionType;
         protected LoginPacket _loginPacket;
     }
 

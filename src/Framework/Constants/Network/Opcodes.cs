@@ -233,8 +233,18 @@ namespace Framework.Constants.Network
 
     public enum ServerOpcodes : uint
     {
+        // ÍøÂçÁ¬½Ó¹¦ÄÜÏûÏ¢
+        MSG_INVALID = 0,
+
+        //client<->login server
+        MSG_LOGIN = 1,
+        MSG_INVALID_CREDENTIAL = 3,
+        MSG_SELECT_SERVER = 4,
+        MSG_LOGIN_RETURN_INFO = 6, 
+        MSG_REQUEST_GAMESERVER,
+
         Max = 0xFFFF,
-        Unknown = 0,
-        None = 0
+        Unknown = 999,
+        None = 9999
     }
 }

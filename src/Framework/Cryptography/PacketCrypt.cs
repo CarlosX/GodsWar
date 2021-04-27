@@ -22,7 +22,7 @@ namespace Framework.Cryptography
         {
             try
             {
-                
+                data = _clientDecrypt.Crypt(data);
                 return true;
             }
             catch (CryptographicException)

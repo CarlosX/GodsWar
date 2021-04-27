@@ -48,6 +48,7 @@ namespace Framework.Cryptography
         };
         public byte[] Crypt(byte[] Packet)
         {
+            HashPointer = 0;
             byte[] Decrypt = new byte[Packet.Length];
             for (int i = 0; i < Packet.Length; i++)
             {

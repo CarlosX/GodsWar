@@ -4,6 +4,8 @@ using Framework.Database;
 using Framework.IO;
 using Framework.Logging;
 using Framework.Networking;
+using LoginServer.Networking.Packets.Client;
+using LoginServer.Networking.Packets.Server;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
@@ -175,7 +177,9 @@ namespace LoginServer.Networking
             {
                 case ClientOpcodes.MSG_LOGIN:
                     {
-                        HandleLogin(packet);
+                        AuthSession auth = new(packet);
+                        auth.Read();
+                        HandleAuthSession(auth);
                         break;
                     }
 
@@ -207,15 +211,14 @@ namespace LoginServer.Networking
         }
 
 
-        public void HandleLogin(LoginPacket packet)
+        public void HandleAuthSession(AuthSession packet)
         {
-            ByteBuffer packet1 = new();
-            packet1.WriteUInt16(0x06);
-            packet1.WriteUInt16(0x03);
-            packet1.WriteBit(0);
-            packet1.WriteBit(1);
+            InvalidCredentialPacket authServer = new();
+            authServer.reason = 0xF0;
+            authServer.code = 0;
 
-            AsyncWrite(packet1.GetData());
+
+            SendPacket(authServer);
         }
 
         public void SendPacket(ServerPacket packet)
@@ -224,9 +227,10 @@ namespace LoginServer.Networking
                 return;
 
             //packet.LogPacket(_loginSession);
-            //packet.WritePacketData();
+            packet.WritePacketData();
 
             var data = packet.GetData();
+            //LogHex.HexDump(data, "SendPacket");
             ServerOpcodes opcode = packet.GetOpcode();
             //PacketLog.Write(data, (uint)opcode, GetRemoteIpAddress(), _connectType, false);
 
@@ -235,19 +239,22 @@ namespace LoginServer.Networking
             ByteBuffer buffer = new ByteBuffer();
             buffer.WriteUInt16((ushort)opcode);
             buffer.WriteBytes(data);
-            packetSize += 2 /*opcode*/;
+            packetSize += 4 /*size+opcode*/;
 
             data = buffer.GetData();
 
             PacketHeader header = new();
             header.Size = packetSize;
-            _loginCrypt.Encrypt(ref data);
 
             ByteBuffer byteBuffer = new();
             header.Write(byteBuffer);
             byteBuffer.WriteBytes(data);
 
-            AsyncWrite(byteBuffer.GetData());
+            byte[] tmpBuff = byteBuffer.GetData();
+            LogHex.HexDump(tmpBuff, "SendPacket1");
+            _loginCrypt.Encrypt(ref tmpBuff);
+            LogHex.HexDump(tmpBuff, "SendPacket2");
+            AsyncWrite(tmpBuff);
         }
     }
 

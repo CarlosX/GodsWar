@@ -317,6 +317,11 @@ namespace Framework.IO
             packed |= ((uint)(pos.Z / 0.25f) & 0x3FF) << 22;
             WriteUInt32(packed);
         }
+        public void WriteByte(byte data)
+        {
+            FlushBits();
+            writeStream.Write(data);
+        }
 
         public bool WriteBit(object bit)
         {
