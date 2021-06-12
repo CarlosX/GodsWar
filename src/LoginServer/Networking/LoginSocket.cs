@@ -211,12 +211,20 @@ namespace LoginServer.Networking
         }
 
 
-        public void HandleAuthSession(AuthSession packet)
+        public void HandleAuthSession(AuthSession _packet)
         {
             InvalidCredentialPacket authServer = new();
-            authServer.reason = 0xF0;
+            /*
+             * 0: el ID no está registrado; 
+             * 1: el inicio de sesión es exitoso; 
+             * 2: inicio de sesión repetido; 
+             * 3: error de contraseña; 
+             * 4: error de versión 
+             */
+            authServer.reason = 0x03;
             authServer.code = 0;
 
+            Log.outInfo(LogFilter.Server, $"{_packet.password}");
 
             SendPacket(authServer);
         }
