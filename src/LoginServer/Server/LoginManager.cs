@@ -23,6 +23,8 @@ namespace LoginServer.Server
         public void SetInitialLoginSettings()
         {
             LoadConfigSettings();
+
+            PacketManager.Initialize();
         }
 
 

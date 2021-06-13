@@ -14,7 +14,7 @@ namespace LoginServer.Networking
     {
         public LoginSession(uint id, string name, LoginSocket sock)
         {
-            m_Socket = sock;
+            _socket = sock;
             _accountId = id;
             _accountName = name;
             expireTime = 60000; // 1 min after socket loss, session is deleted
@@ -31,10 +31,10 @@ namespace LoginServer.Networking
                 LogoutPlayer(true);*/
 
             // - If have unclosed socket, close it
-            if (m_Socket != null)
+            if (_socket != null)
             {
-                m_Socket.CloseSocket();
-                m_Socket = null;
+                _socket.CloseSocket();
+                _socket = null;
             }
 
             // empty incoming packet queue
@@ -130,8 +130,13 @@ namespace LoginServer.Networking
             return session != null;
         }
 
+        public void SendPacket(byte[] data)
+        {
+            _socket.SendPacket(data);
+        }
+
         #region Fields
-        LoginSocket m_Socket;
+        LoginSocket _socket;
         string m_Address;
         uint _accountId;
         string _accountName;

@@ -270,6 +270,9 @@ namespace LoginServer.Networking
             SendPacket(authServer);
             Global.LoginMgr.AddSession(_loginSession);
 
+            var serverList = new ServerListPacket();
+            SendPacket(serverList);
+
             AsyncRead();
         }
 
@@ -307,6 +310,12 @@ namespace LoginServer.Networking
             _loginCrypt.Encrypt(ref tmpBuff, ref hashPointSend);
             LogHex.HexDump(tmpBuff, "SendPacket2");
             AsyncWrite(tmpBuff);
+        }
+
+        public void SendPacket(byte[] packet)
+        {
+            _loginCrypt.Encrypt(ref packet, ref hashPointSend);
+            AsyncWrite(packet);
         }
     }
 

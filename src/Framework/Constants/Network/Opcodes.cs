@@ -242,6 +242,7 @@ namespace Framework.Constants.Network
         MSG_SELECT_SERVER = 4,
         MSG_LOGIN_RETURN_INFO = 6, 
         MSG_REQUEST_GAMESERVER,
+        MSG_UNK2 = 0x2718,
 
         Max = 0xFFFF,
         Unknown = 999,
