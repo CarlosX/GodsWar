@@ -1,9 +1,4 @@
 ﻿using Framework.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LoginServer.Networking.Packets.Client
 {
@@ -19,7 +14,7 @@ namespace LoginServer.Networking.Packets.Client
             _loginPacket.ReadBytes(32);
             uint unk3 = _loginPacket.ReadUInt32();
             StringShift shift = new();
-            string username = shift.Parser(usernameShift);
+            username = shift.Parser(usernameShift);
             Log.outInfo(LogFilter.Server, $"username: {username}");
             Log.outInfo(LogFilter.Server, $"passwordMD5: {password}");
             Log.outInfo(LogFilter.Server, $"MAC: {clientMac}");
@@ -27,6 +22,7 @@ namespace LoginServer.Networking.Packets.Client
         }
 
         #region variables
+        public string username { set; get; }
         public string password { set; get; }
         #endregion
     }

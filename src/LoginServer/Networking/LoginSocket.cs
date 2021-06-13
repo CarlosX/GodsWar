@@ -1,4 +1,5 @@
-﻿using Framework.Constants.Network;
+﻿using Framework.Constants;
+using Framework.Constants.Network;
 using Framework.Cryptography;
 using Framework.Database;
 using Framework.IO;
@@ -24,6 +25,8 @@ namespace LoginServer.Networking
         object _worldSessionLock = new();
         LoginSession _loginSession;
         LoginCrypt _loginCrypt;
+        uint hashPointRecv = 0;
+        uint hashPointSend = 0;
 
         AsyncCallbackProcessor<QueryCallback> _queryProcessor = new();
 
@@ -44,6 +47,16 @@ namespace LoginServer.Networking
             base.Dispose();
         }
 
+        public override bool Update()
+        {
+            if (!base.Update())
+                return false;
+
+            _queryProcessor.ProcessReadyCallbacks();
+
+            return true;
+        }
+
         public override void Accept()
         {
             Console.WriteLine("Accept");
@@ -52,6 +65,7 @@ namespace LoginServer.Networking
             //AsyncReadWithCallback(InitializeHandler);
             AsyncRead();
         }
+
 
         bool ReadHeader()
         {
@@ -142,7 +156,7 @@ namespace LoginServer.Networking
         ReadDataHandlerResult ReadData()
         {
             byte[] tmpBuff = _packetBuffer.GetData();
-            if (!_loginCrypt.Decrypt(ref tmpBuff))
+            if (!_loginCrypt.Decrypt(ref tmpBuff, ref hashPointRecv))
             {
                 Log.outError(LogFilter.Network, $"WorldSocket.ReadData(): client {GetRemoteIpAddress()} failed to decrypt packet");
                 return ReadDataHandlerResult.Error;
@@ -180,7 +194,7 @@ namespace LoginServer.Networking
                         AuthSession auth = new(packet);
                         auth.Read();
                         HandleAuthSession(auth);
-                        break;
+                        return ReadDataHandlerResult.WaitingForQuery;
                     }
 
                 default:
@@ -213,7 +227,36 @@ namespace LoginServer.Networking
 
         public void HandleAuthSession(AuthSession _packet)
         {
+            PreparedStatement stmt = DB.Login.GetPreparedStatement(LoginStatements.SEL_ACCOUNT_INFO_BY_USERNAME);
+            stmt.AddValue(0, _packet.username);
+
+            _queryProcessor.AddCallback(DB.Login.AsyncQuery(stmt).WithCallback(HandleAuthSessionCallback, _packet));
+        }
+
+        private void HandleAuthSessionCallback(AuthSession _packet, SQLResult result)
+        {
+            // Stop if the account is not found
+            if (result.IsEmpty())
+            {
+                Log.outError(LogFilter.Network, "HandleAuthSession: Sent Auth Response (unknown account).");
+                CloseSocket();
+                return;
+            }
+
             InvalidCredentialPacket authServer = new();
+            AccountInfo account = new(result.GetFields());
+            
+            if (!account.Password.Equals(_packet.password))
+            {
+                Log.outInfo(LogFilter.Server, $"Password: {account.Password} !== {_packet.password}");
+                authServer.reason = ResponseCodes.ERROR_PASSWORD;
+                authServer.code = 0;
+                SendPacket(authServer);
+                CloseSocket();
+                return;
+            }
+
+            _loginSession = new LoginSession(account.Id, account.Username, this);
             /*
              * 0: el ID no está registrado; 
              * 1: el inicio de sesión es exitoso; 
@@ -221,12 +264,13 @@ namespace LoginServer.Networking
              * 3: error de contraseña; 
              * 4: error de versión 
              */
-            authServer.reason = 0x03;
+            authServer.reason = ResponseCodes.SESSION_SUCCESS;
             authServer.code = 0;
 
-            Log.outInfo(LogFilter.Server, $"{_packet.password}");
-
             SendPacket(authServer);
+            Global.LoginMgr.AddSession(_loginSession);
+
+            AsyncRead();
         }
 
         public void SendPacket(ServerPacket packet)
@@ -260,7 +304,7 @@ namespace LoginServer.Networking
 
             byte[] tmpBuff = byteBuffer.GetData();
             LogHex.HexDump(tmpBuff, "SendPacket1");
-            _loginCrypt.Encrypt(ref tmpBuff);
+            _loginCrypt.Encrypt(ref tmpBuff, ref hashPointSend);
             LogHex.HexDump(tmpBuff, "SendPacket2");
             AsyncWrite(tmpBuff);
         }
@@ -271,5 +315,18 @@ namespace LoginServer.Networking
         Ok = 0,
         Error = 1,
         WaitingForQuery = 2
+    }
+
+    class AccountInfo
+    {
+        public AccountInfo(SQLFields fields)
+        {
+            Id = fields.Read<uint>(0);
+            Username = fields.Read<string>(1);
+            Password = fields.Read<string>(2);
+        }
+        public uint Id;
+        public string Username;
+        public string Password;
     }
 }

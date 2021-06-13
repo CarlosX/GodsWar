@@ -18,11 +18,11 @@ namespace Framework.Cryptography
             IsInitialized = true;
         }
 
-        public bool Encrypt(ref byte[] data)
+        public bool Encrypt(ref byte[] data, ref uint hashPoint)
         {
             try
             {
-                data = _clientDecrypt.Crypt(data);
+                data = _clientDecrypt.Crypt(data, ref hashPoint);
                 return true;
             }
             catch (CryptographicException)
@@ -31,11 +31,11 @@ namespace Framework.Cryptography
             }
         }
 
-        public bool Decrypt(ref byte[] data)
+        public bool Decrypt(ref byte[] data, ref uint hashPoint)
         {
             try
             {
-                data = _clientDecrypt.Crypt(data);
+                data = _clientDecrypt.Crypt(data, ref hashPoint);
                 return true;
             }
             catch (CryptographicException)

@@ -1,4 +1,5 @@
-﻿using Framework.Constants.Network;
+﻿using Framework.Constants;
+using Framework.Constants.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,10 +26,10 @@ namespace LoginServer.Networking.Packets.Server
         public InvalidCredentialPacket() : base(ServerOpcodes.MSG_INVALID_CREDENTIAL) { }
         public override void Write()
         {
-            _loginPacket.WriteByte(reason);
+            _loginPacket.WriteByte((byte)reason);
             _loginPacket.WriteByte(code);
         }
-        public byte reason { set; get; }
+        public ResponseCodes reason { set; get; }
         public byte code { set; get; }
     }
 }

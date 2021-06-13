@@ -63,9 +63,9 @@ namespace LoginServer.Networking
             throw new NotImplementedException();
         }
 
-        internal uint GetAccountId()
+        public uint GetAccountId()
         {
-            throw new NotImplementedException();
+            return _accountId;
         }
 
         bool ShouldLogOut(long currTime)

@@ -23,8 +23,8 @@ namespace LoginServer
             if (!ConfigMgr.Load("LoginServer.conf"))
                 ExitNow();
 
-            /*if (!StartDB())
-                ExitNow();*/
+            if (!StartDB())
+                ExitNow();
 
             Global.LoginMgr.SetInitialLoginSettings();
 
@@ -84,13 +84,11 @@ namespace LoginServer
 
         static bool StartDB()
         {
-            DatabaseLoader loader = new DatabaseLoader(DatabaseTypeFlags.None);
+            DatabaseLoader loader = new DatabaseLoader(DatabaseTypeFlags.Login);
             loader.AddDatabase(DB.Login, "Login");
 
             if (!loader.Load())
                 return false;
-
-            Log.SetRealmId(0); // Enables DB appenders when realm is set.
             return true;
         }
 

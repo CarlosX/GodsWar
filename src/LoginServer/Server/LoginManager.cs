@@ -118,28 +118,15 @@ namespace LoginServer.Server
 
         public void Update(uint diff)
         {
-            
+            UpdateSessions(diff);
+
+            ProcessQueryCallbacks();
         }
 
         void ProcessLinkInstanceSocket(Tuple<LoginSocket, ulong> linkInfo)
         {
             if (!linkInfo.Item1.IsOpen())
                 return;
-
-            /*ConnectToKey key = new();
-            key.Raw = linkInfo.Item2;
-
-            LoginSession session = FindSession(key.AccountId);
-            if (!session || session.GetConnectToInstanceKey() != linkInfo.Item2)
-            {
-                linkInfo.Item1.SendAuthResponseError(BattlenetRpcErrorCode.TimedOut);
-                linkInfo.Item1.CloseSocket();
-                return;
-            }
-
-            linkInfo.Item1.SetWorldSession(session);
-            session.AddInstanceConnection(linkInfo.Item1);
-            session.HandleContinuePlayerLogin();*/
         }
 
         uint GetQueuePos(LoginSession sess)
