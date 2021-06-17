@@ -5,16 +5,16 @@ using Framework.Database;
 using Framework.IO;
 using Framework.Logging;
 using Framework.Networking;
-using LoginServer.Networking.Packets.Client;
-using LoginServer.Networking.Packets.Server;
+using Game.Networking.Packets.Client;
+using Game.Networking.Packets.Server;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 
-namespace LoginServer.Networking
+namespace Game.Networking
 {
-    public class LoginSocket : SocketBase
+    public class WorldSocket : SocketBase
     {
         static readonly int HeaderSize = 2;
 
@@ -23,14 +23,14 @@ namespace LoginServer.Networking
         long _LastPingTime;
         uint _OverSpeedPings;
         object _worldSessionLock = new();
-        LoginSession _loginSession;
+        WorldSession _loginSession;
         LoginCrypt _loginCrypt;
         uint hashPointRecv = 0;
         uint hashPointSend = 0;
 
         AsyncCallbackProcessor<QueryCallback> _queryProcessor = new();
 
-        public LoginSocket(Socket socket) : base(socket)
+        public WorldSocket(Socket socket) : base(socket)
         {
             _headerBuffer = new SocketBuffer(HeaderSize);
             _packetBuffer = new SocketBuffer(0);
@@ -193,7 +193,7 @@ namespace LoginServer.Networking
         {
             byte[] tmpBuff = _packetBuffer.GetData();
 
-            LoginPacket packet = new(tmpBuff);
+            WorldPacket packet = new(tmpBuff);
             _packetBuffer.Reset();
 
             if (packet.GetOpcode() >= (int)ClientOpcodes.Max)
@@ -213,7 +213,7 @@ namespace LoginServer.Networking
 
             switch (opcode)
             {
-                case ClientOpcodes.MSG_LOGIN:
+                case ClientOpcodes.MSG_LOGIN_GAMESERVER:
                     {
                         AuthSession auth = new(packet);
                         auth.Read();
@@ -251,15 +251,16 @@ namespace LoginServer.Networking
 
         public void HandleAuthSession(AuthSession _packet)
         {
-            PreparedStatement stmt = DB.Login.GetPreparedStatement(LoginStatements.SEL_ACCOUNT_INFO_BY_USERNAME);
+            /*PreparedStatement stmt = DB.Login.GetPreparedStatement(LoginStatements.SEL_ACCOUNT_INFO_BY_USERNAME);
             stmt.AddValue(0, _packet.username);
 
-            _queryProcessor.AddCallback(DB.Login.AsyncQuery(stmt).WithCallback(HandleAuthSessionCallback, _packet));
+            _queryProcessor.AddCallback(DB.Login.AsyncQuery(stmt).WithCallback(HandleAuthSessionCallback, _packet));*/
+            HandleAuthSessionCallback(_packet, null);
         }
 
         private void HandleAuthSessionCallback(AuthSession _packet, SQLResult result)
         {
-            // Stop if the account is not found
+            /*// Stop if the account is not found
             if (result.IsEmpty())
             {
                 Log.outError(LogFilter.Network, "HandleAuthSession: Sent Auth Response (unknown account).");
@@ -278,9 +279,11 @@ namespace LoginServer.Networking
                 SendPacket(authServer);
                 CloseSocket();
                 return;
-            }
+            }*/
 
-            _loginSession = new LoginSession(account.Id, account.Username, this);
+            InvalidCredentialPacket authServer = new();
+
+            _loginSession = new WorldSession(1, "carlosx", this);
             /*
              * 0: el ID no está registrado; 
              * 1: el inicio de sesión es exitoso; 
@@ -291,11 +294,17 @@ namespace LoginServer.Networking
             authServer.reason = ResponseCodes.SESSION_SUCCESS;
             authServer.code = 0;
 
-            SendPacket(authServer);
-            Global.LoginMgr.AddSession(_loginSession);
+            //SendPacket(authServer);
+            Global.WorldMgr.AddSession(_loginSession);
 
-            var serverList = new ServerListPacket();
-            SendPacket(serverList);
+            var ret = new ServerAuthResponsePacket();
+            SendPacket(ret);
+
+            var ret2 = new CharacterInfoResponsePacket();
+            SendPacket(ret2);
+
+            /*var serverList = new ServerListPacket();
+            SendPacket(serverList);*/
 
             AsyncRead();
         }

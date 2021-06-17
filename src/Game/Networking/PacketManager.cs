@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LoginServer.Networking
+namespace Game.Networking
 {
     public static class PacketManager
     {
@@ -54,7 +54,7 @@ namespace LoginServer.Networking
             }
         }
 
-        public static bool TryPeek(this ConcurrentQueue<LoginPacket> queue, out LoginPacket result)
+        public static bool TryPeek(this ConcurrentQueue<WorldPacket> queue, out WorldPacket result)
         {
             result = null;
 
@@ -84,13 +84,13 @@ namespace LoginServer.Networking
     {
         public PacketHandler(MethodInfo info, SessionStatus status, PacketProcessing processingplace, Type type)
         {
-            methodCaller = (Action<LoginSession, ClientPacket>)GetType().GetMethod("CreateDelegate", BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(type).Invoke(null, new object[] { info });
+            methodCaller = (Action<WorldSession, ClientPacket>)GetType().GetMethod("CreateDelegate", BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(type).Invoke(null, new object[] { info });
             sessionStatus = status;
             ProcessingPlace = processingplace;
             packetType = type;
         }
 
-        public void Invoke(LoginSession session, LoginPacket packet)
+        public void Invoke(WorldSession session, WorldPacket packet)
         {
             if (packetType == null)
                 return;
@@ -103,17 +103,17 @@ namespace LoginServer.Networking
             }
         }
 
-        static Action<LoginSession, ClientPacket> CreateDelegate<P1>(MethodInfo method) where P1 : ClientPacket
+        static Action<WorldSession, ClientPacket> CreateDelegate<P1>(MethodInfo method) where P1 : ClientPacket
         {
             // create first delegate. It is not fine because its 
             // signature contains unknown types T and P1
-            Action<LoginSession, P1> d = (Action<LoginSession, P1>)method.CreateDelegate(typeof(Action<LoginSession, P1>));
+            Action<WorldSession, P1> d = (Action<WorldSession, P1>)method.CreateDelegate(typeof(Action<WorldSession, P1>));
             // create another delegate having necessary signature. 
             // It encapsulates first delegate with a closure
-            return delegate (LoginSession target, ClientPacket p) { d(target, (P1)p); };
+            return delegate (WorldSession target, ClientPacket p) { d(target, (P1)p); };
         }
 
-        Action<LoginSession, ClientPacket> methodCaller;
+        Action<WorldSession, ClientPacket> methodCaller;
         Type packetType;
         public PacketProcessing ProcessingPlace { get; private set; }
         public SessionStatus sessionStatus { get; private set; }

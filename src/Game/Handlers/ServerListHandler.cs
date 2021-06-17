@@ -1,15 +1,15 @@
 ﻿using Framework.Constants.Network;
-using LoginServer.Networking;
-using LoginServer.Networking.Packets.Server;
+using Game.Networking;
+using Game.Networking.Packets.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LoginServer.Networking
+namespace Game.Networking
 {
-    public partial class LoginSession
+    public partial class WorldSession
     {
         [LoginPacketHandler(ClientOpcodes.MSG_SELECT_SERVER)]
         void HandleSelectServer(SelectServerPacket selectServer)

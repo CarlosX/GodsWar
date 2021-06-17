@@ -8,37 +8,37 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LoginServer.Networking
+namespace Game.Networking
 {
     public abstract class ClientPacket : IDisposable
     {
-        protected ClientPacket(LoginPacket loginPacket)
+        protected ClientPacket(WorldPacket worldPacket)
         {
-            _loginPacket = loginPacket;
+            _worldPacket = worldPacket;
         }
 
         public abstract void Read();
 
         public void Dispose()
         {
-            _loginPacket.Dispose();
+            _worldPacket.Dispose();
         }
 
-        public ClientOpcodes GetOpcode() { return (ClientOpcodes)_loginPacket.GetOpcode(); }
+        public ClientOpcodes GetOpcode() { return (ClientOpcodes)_worldPacket.GetOpcode(); }
 
-        public void LogPacket(LoginSession session)
+        public void LogPacket(WorldSession session)
         {
             Log.outDebug(LogFilter.Network, "Received ClientOpcode: {0} From: {1}", GetOpcode(), session != null ? session.GetPlayerInfo() : "Unknown IP");
         }
 
-        protected LoginPacket _loginPacket;
+        protected WorldPacket _worldPacket;
     }
 
     public abstract class ServerPacket
     {
         protected ServerPacket(ServerOpcodes opcode)
         {
-            _loginPacket = new LoginPacket(opcode);
+            _loginPacket = new WorldPacket(opcode);
         }
 
         public void Clear()
@@ -57,7 +57,7 @@ namespace LoginServer.Networking
             return buffer;
         }
 
-        public void LogPacket(LoginSession session)
+        public void LogPacket(WorldSession session)
         {
             Log.outDebug(LogFilter.Network, "Sent ServerOpcode: {0} To: {1}", GetOpcode(), session != null ? session.GetPlayerInfo() : "");
         }
@@ -76,17 +76,17 @@ namespace LoginServer.Networking
         }
 
         byte[] buffer;
-        protected LoginPacket _loginPacket;
+        protected WorldPacket _loginPacket;
     }
 
-    public class LoginPacket : ByteBuffer
+    public class WorldPacket : ByteBuffer
     {
-        public LoginPacket(ServerOpcodes opcode = ServerOpcodes.None)
+        public WorldPacket(ServerOpcodes opcode = ServerOpcodes.None)
         {
             this.opcode = (uint)opcode;
         }
 
-        public LoginPacket(byte[] data) : base(data)
+        public WorldPacket(byte[] data) : base(data)
         {
             //ReadUInt16();//Size
             opcode = ReadUInt16();
@@ -141,7 +141,7 @@ namespace LoginServer.Networking
             return resultSize;
         }
 
-        public void WriteBytes(LoginPacket data)
+        public void WriteBytes(WorldPacket data)
         {
             FlushBits();
             WriteBytes(data.GetData());

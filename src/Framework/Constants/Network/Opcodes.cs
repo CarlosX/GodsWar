@@ -227,6 +227,9 @@ namespace Framework.Constants.Network
 
         MSG_WALK = 10194,
 
+
+        MSG_CHARACTER_INFO = 0x2712,
+
         Max = 0xFFFF,
         Unknown = 0
     }
@@ -243,6 +246,13 @@ namespace Framework.Constants.Network
         MSG_LOGIN_RETURN_INFO = 6, 
         MSG_REQUEST_GAMESERVER,
         MSG_UNK2 = 0x2718,
+
+
+        MSG_RESPONSE_GAMESERVER = 0x2711,
+        MSG_RESPONSE_CHARACTER_INFO = 0x2712,
+        MSG_RESPONSE_ENTER_GAME = 0x2723,
+        MSG_RESPONSE_CLIENT_READY = 0x27DA,
+        MSG_RESPONSE_GAMESERVER_AUTH = 0x2876,
 
         Max = 0xFFFF,
         Unknown = 999,

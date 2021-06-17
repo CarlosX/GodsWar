@@ -11,11 +11,11 @@ namespace LoginServer.Networking
 {
     public partial class LoginSession
     {
-        [LoginPacketHandler(ClientOpcodes.MSG_SELECT_SERVER)]
-        void HandleSelectServer(SelectServerPacket selectServer)
+        [LoginPacketHandler(ClientOpcodes.MSG_LOGIN_RETURN_INFO)]
+        void HandleLoginReturnInfo(SelectServerPacket selectServer)
         {
-            var data = new SelectServerResponsePacket();
-            SendPacket(data);
+            var ret = new LoginReturnInfoResponsePacket();
+            SendPacket(ret);
         }
     }
 }

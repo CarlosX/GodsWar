@@ -1,7 +1,7 @@
 ﻿using Framework.Constants;
 using Framework.Constants.Network;
 using Framework.Database;
-using LoginServer.Server;
+using Game.Server;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,11 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LoginServer.Networking
+namespace Game.Networking
 {
-    public partial class LoginSession : IDisposable
+    public partial class WorldSession : IDisposable
     {
-        public LoginSession(uint id, string name, LoginSocket sock)
+        public WorldSession(uint id, string name, WorldSocket sock)
         {
             _loginSocket = sock;
             _accountId = id;
@@ -39,7 +39,7 @@ namespace LoginServer.Networking
             }
 
             // empty incoming packet queue
-            LoginPacket packet;
+            WorldPacket packet;
             while (_recvQueue.TryDequeue(out packet)) ;
 
             //DB.Login.Execute("UPDATE account SET online = 0 WHERE id = {0};", GetAccountId());     // One-time query
@@ -98,11 +98,11 @@ namespace LoginServer.Networking
 
         public bool Update(uint diff)
         {
-            LoginPacket firstDelayedPacket = null;
+            WorldPacket firstDelayedPacket = null;
             uint processedPackets = 0;
             long currentTime = Time.UnixTime;
 
-            LoginPacket packet;
+            WorldPacket packet;
             while (_loginSocket != null && !_recvQueue.IsEmpty && (_recvQueue.TryPeek(out packet) && packet != firstDelayedPacket) && _recvQueue.TryDequeue(out packet))
             {
                 try
@@ -136,7 +136,7 @@ namespace LoginServer.Networking
             return true;
         }
 
-        public void QueuePacket(LoginPacket packet)
+        public void QueuePacket(WorldPacket packet)
         {
             _recvQueue.Enqueue(packet);
         }
@@ -152,16 +152,16 @@ namespace LoginServer.Networking
         public void ResetTimeOutTime(bool onlyActive)
         {
             if (GetPlayer())
-                m_timeOutTime = GameTime.GetGameTime() + LoginConfig.GetIntValue(LoginCfg.SocketTimeoutTimeActive);
+                m_timeOutTime = GameTime.GetGameTime() + WorldConfig.GetIntValue(WorldCfg.SocketTimeoutTimeActive);
             else if (!onlyActive)
-                m_timeOutTime = GameTime.GetGameTime() + LoginConfig.GetIntValue(LoginCfg.SocketTimeoutTime);
+                m_timeOutTime = GameTime.GetGameTime() + WorldConfig.GetIntValue(WorldCfg.SocketTimeoutTime);
         }
         bool IsConnectionIdle()
         {
             return m_timeOutTime < GameTime.GetGameTime() && !m_inQueue;
         }
 
-        public static implicit operator bool(LoginSession session)
+        public static implicit operator bool(WorldSession session)
         {
             return session != null;
         }
@@ -177,7 +177,7 @@ namespace LoginServer.Networking
         }
 
         #region Fields
-        LoginSocket _loginSocket;
+        WorldSocket _loginSocket;
         string m_Address;
         uint _accountId;
         string _accountName;
@@ -192,7 +192,7 @@ namespace LoginServer.Networking
         uint m_latency;
         uint m_clientTimeDelay;
 
-        ConcurrentQueue<LoginPacket> _recvQueue = new();
+        ConcurrentQueue<WorldPacket> _recvQueue = new();
         Task<SQLQueryHolder<AccountInfoQueryLoad>> _accountLoginCallback;
 
         AsyncCallbackProcessor<QueryCallback> _queryProcessor = new();

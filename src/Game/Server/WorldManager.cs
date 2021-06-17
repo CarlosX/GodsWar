@@ -1,6 +1,6 @@
 ﻿using Framework.Constants;
 using Framework.Database;
-using LoginServer.Networking;
+using Game.Networking;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,19 +8,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LoginServer.Server
+namespace Game.Server
 {
-    public class LoginManager : Singleton<LoginManager>
+    public class WorldManager : Singleton<WorldManager>
     {
-        LoginManager()
+        WorldManager()
         {
             foreach (LoginTimers timer in Enum.GetValues(typeof(LoginTimers)))
                 m_timers[timer] = new IntervalTimer();
 
-            _loginUpdateTime = new LoginUpdateTime();
+            _loginUpdateTime = new WorldUpdateTime();
         }
 
-        public void SetInitialLoginSettings()
+        public void SetInitialWorldSettings()
         {
             LoadConfigSettings();
 
@@ -31,10 +31,10 @@ namespace LoginServer.Server
 
         public void LoadConfigSettings(bool reload = false)
         {
-            LoginConfig.Load(reload);
+            WorldConfig.Load(reload);
         }
 
-        public LoginSession FindSession(uint id)
+        public WorldSession FindSession(uint id)
         {
             return sessions.LookupByKey(id);
         }
@@ -55,17 +55,17 @@ namespace LoginServer.Server
             return true;
         }
 
-        public void AddSession(LoginSession s)
+        public void AddSession(WorldSession s)
         {
             addSessQueue.Enqueue(s);
         }
 
-        public void AddInstanceSocket(LoginSocket sock, ulong connectToKey)
+        public void AddInstanceSocket(WorldSocket sock, ulong connectToKey)
         {
             _linkSocketQueue.Enqueue(Tuple.Create(sock, connectToKey));
         }
 
-        void AddSession_(LoginSession s)
+        void AddSession_(WorldSession s)
         {
             Debugger.Assert(s != null);
 
@@ -80,7 +80,7 @@ namespace LoginServer.Server
             ProcessQueryCallbacks();
         }
 
-        uint GetQueuePos(LoginSession sess)
+        uint GetQueuePos(WorldSession sess)
         {
             uint position = 1;
 
@@ -94,7 +94,7 @@ namespace LoginServer.Server
             return 0;
         }
 
-        void AddQueuedPlayer(LoginSession sess)
+        void AddQueuedPlayer(WorldSession sess)
         {
             sess.SetInQueue(true);
             m_QueuedPlayer.Add(sess);
@@ -103,7 +103,7 @@ namespace LoginServer.Server
             //sess.SendAuthResponse(BattlenetRpcErrorCode.Ok, true, GetQueuePos(sess));
         }
 
-        bool RemoveQueuedPlayer(LoginSession sess)
+        bool RemoveQueuedPlayer(WorldSession sess)
         {
             // sessions count including queued to remove (if removed_session set)
             int sessions = GetActiveSessionCount();
@@ -137,7 +137,7 @@ namespace LoginServer.Server
             // accept first in queue
             if ((m_playerLimit == 0 || sessions < m_playerLimit) && !m_QueuedPlayer.Empty())
             {
-                LoginSession pop_sess = m_QueuedPlayer.First();
+                WorldSession pop_sess = m_QueuedPlayer.First();
                 pop_sess.InitializeSession();
 
                 m_QueuedPlayer.RemoveAt(0);
@@ -159,14 +159,14 @@ namespace LoginServer.Server
         public void UpdateSessions(uint diff)
         {
             // Add new sessions
-            LoginSession sess;
+            WorldSession sess;
             while (addSessQueue.TryDequeue(out sess))
                 AddSession_(sess);
 
             // Then send an update signal to remaining ones
             foreach (var pair in sessions)
             {
-                LoginSession session = pair.Value;
+                WorldSession session = pair.Value;
                 if (!session.Update(diff))    // As interval = 0
                 {
                     /*if (!RemoveQueuedPlayer(session) && session != null && LoginConfig.GetIntValue(LoginCfg.IntervalDisconnectTolerance) != 0)
@@ -190,7 +190,7 @@ namespace LoginServer.Server
             _queryProcessor.ProcessReadyCallbacks();
         }
 
-        public List<LoginSession> GetAllSessions()
+        public List<WorldSession> GetAllSessions()
         {
             return sessions.Values.ToList();
         }
@@ -232,7 +232,7 @@ namespace LoginServer.Server
         bool m_isClosed;
         Dictionary<LoginTimers, IntervalTimer> m_timers = new();
 
-        ConcurrentDictionary<uint, LoginSession> sessions = new();
+        ConcurrentDictionary<uint, WorldSession> sessions = new();
         Dictionary<uint, long> m_disconnects = new();
         uint m_maxActiveSessionCount;
         uint m_maxQueuedSessionCount;
@@ -240,14 +240,14 @@ namespace LoginServer.Server
         uint m_MaxPlayerCount;
         uint m_playerLimit;
 
-        List<LoginSession> m_QueuedPlayer = new();
-        ConcurrentQueue<LoginSession> addSessQueue = new();
+        List<WorldSession> m_QueuedPlayer = new();
+        ConcurrentQueue<WorldSession> addSessQueue = new();
 
-        ConcurrentQueue<Tuple<LoginSocket, ulong>> _linkSocketQueue = new();
+        ConcurrentQueue<Tuple<WorldSocket, ulong>> _linkSocketQueue = new();
 
         AsyncCallbackProcessor<QueryCallback> _queryProcessor = new();
 
-        LoginUpdateTime _loginUpdateTime;
+        WorldUpdateTime _loginUpdateTime;
         #endregion
     }
 

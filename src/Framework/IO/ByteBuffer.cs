@@ -271,6 +271,22 @@ namespace Framework.IO
             WriteBytes(sBytes);
         }
 
+        public void WriteString(string str, int len)
+        {
+            if (str.IsEmpty())
+                return;
+
+            byte[] sBytes = Encoding.UTF8.GetBytes(str);
+            WriteBytes(sBytes);
+            if (str.Length < len)
+            {
+                for (int i = 0; i < len - str.Length; i++)
+                {
+                    WriteByte(0);
+                }
+            }
+        }
+
         public void WriteBytes(byte[] data)
         {
             FlushBits();

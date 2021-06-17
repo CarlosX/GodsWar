@@ -25,7 +25,20 @@ namespace Framework.Constants
     }
     public enum WorldCfg
     {
-        MaxResultsLookupCommands
+        EnableSinfoLogin,
+        MaxResultsLookupCommands,
+        CacheDataQueries,
+        IpBasedActionLogging,
+        PacketSpoofBanduration,
+        PacketSpoofBanmode,
+        UptimeUpdate,
+        SocketTimeoutTime,
+        SocketTimeoutTimeActive,
+        SessionAddDelay,
+        PortWorld,
+        PortInstance,
+        IntervalDisconnectTolerance,
+        IntervalSave
     }
 
     public enum ComparisionType

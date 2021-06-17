@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LoginServer.Networking.Packets.Server
+namespace Game.Networking.Packets.Server
 {
     public class ServerListPacket : ServerPacket
     {
@@ -53,7 +53,7 @@ namespace LoginServer.Networking.Packets.Server
 
     public class SelectServerPacket : ClientPacket
     {
-        public SelectServerPacket(LoginPacket packet) : base(packet) { }
+        public SelectServerPacket(WorldPacket packet) : base(packet) { }
         public override void Read()
         {
 

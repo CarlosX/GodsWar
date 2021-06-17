@@ -350,3 +350,4 @@ MigrationBackup/
 .ionide/
 /base/
 /base2/
+/src/LoginServer/Networking/Base2.cs
