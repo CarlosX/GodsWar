@@ -59,10 +59,8 @@ namespace Game.Networking
 
         public override void Accept()
         {
-            Console.WriteLine("Accept");
             _packetBuffer.Resize(0);
             _packetBuffer.Reset();
-            //AsyncReadWithCallback(InitializeHandler);
             AsyncRead();
         }
 
@@ -86,27 +84,6 @@ namespace Game.Networking
 
             if (args.BytesTransferred > 0)
             {
-                /*if (_packetBuffer.GetRemainingSpace() > 0)
-                {
-                    // need to receive the header
-                    int readHeaderSize = Math.Min(args.BytesTransferred, _packetBuffer.GetRemainingSpace());
-                    _packetBuffer.Write(args.Buffer, 0, readHeaderSize);
-
-                    if (_packetBuffer.GetRemainingSpace() > 0)
-                    {
-                        // Couldn't receive the whole header this time.
-                        AsyncReadWithCallback(InitializeHandler);
-                        return;
-                    }
-
-                    //ByteBuffer buffer = new(_packetBuffer.GetData());
-
-                    _packetBuffer.Resize(0);
-                    _packetBuffer.Reset();
-                    HandleSendAuthSession();
-                    AsyncRead();
-                    return;
-                }*/
                 ByteBuffer buffer = new(_packetBuffer.GetData());
                 _packetBuffer.Resize(0);
                 _packetBuffer.Reset();
@@ -126,19 +103,16 @@ namespace Game.Networking
                 return;
 
             int currentReadIndex = 0;
+            byte[] tmpBuff = new byte[args.BytesTransferred];
+
+            Buffer.BlockCopy(args.Buffer, 0, tmpBuff, 0, args.BytesTransferred);
+            if (!_loginCrypt.Decrypt(ref tmpBuff, ref hashPointRecv))
+            {
+                Log.outError(LogFilter.Network, $"WorldSocket.ReadData(): client {GetRemoteIpAddress()} failed to decrypt packet");
+                return;
+            }
             while (currentReadIndex < args.BytesTransferred)
             {
-                byte[] tmpBuff = new byte[args.BytesTransferred];
-
-                Buffer.BlockCopy(args.Buffer, 0, tmpBuff, 0, args.BytesTransferred);
-                if (!_loginCrypt.Decrypt(ref tmpBuff, ref hashPointRecv))
-                {
-                    Log.outError(LogFilter.Network, $"WorldSocket.ReadData(): client {GetRemoteIpAddress()} failed to decrypt packet");
-                    return;
-                }
-
-                //LogHex.HexDump(tmpBuff, "", 16, 20);
-
                 if (_headerBuffer.GetRemainingSpace() > 0)
                 {
                     // need to receive the header
@@ -220,7 +194,11 @@ namespace Game.Networking
                         HandleAuthSession(auth);
                         return ReadDataHandlerResult.WaitingForQuery;
                     }
-
+                case ClientOpcodes.MSG_UNK_10200:
+                case ClientOpcodes.MSG_UNK_10311:
+                    {
+                        break;
+                    }
                 default:
                     lock (_worldSessionLock)
                     {
@@ -339,9 +317,9 @@ namespace Game.Networking
             byteBuffer.WriteBytes(data);
 
             byte[] tmpBuff = byteBuffer.GetData();
-            LogHex.HexDump(tmpBuff, "SendPacket1");
+            //LogHex.HexDump(tmpBuff, "SendPacket1");
             _loginCrypt.Encrypt(ref tmpBuff, ref hashPointSend);
-            LogHex.HexDump(tmpBuff, "SendPacket2");
+            //LogHex.HexDump(tmpBuff, "SendPacket2");
             AsyncWrite(tmpBuff);
         }
 

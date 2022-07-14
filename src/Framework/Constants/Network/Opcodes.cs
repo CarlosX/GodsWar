@@ -227,6 +227,8 @@ namespace Framework.Constants.Network
 
         MSG_WALK = 10194,
 
+        MSG_UNK_10200 = 10200,
+        MSG_UNK_10311 = 10311,
 
         MSG_CHARACTER_INFO = 0x2712,
 

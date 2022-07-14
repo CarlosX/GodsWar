@@ -41,7 +41,7 @@ namespace Framework.Database
 
             if (!File.Exists(path + fileName))
             {
-                Log.outError(LogFilter.SqlUpdates, $"File \"{path + fileName}\" is missing, download it from \"http://www.trinitycore.org/f/files/category/1-database/\"" +
+                Log.outError(LogFilter.SqlUpdates, $"File \"{path + fileName}\" is missing" +
                     " and place it in your sql directory.");
                 return false;
             }
